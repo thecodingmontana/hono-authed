@@ -2,7 +2,7 @@ import { sha256 } from "@oslojs/crypto/sha2";
 import { encodeBase32, encodeHexLowerCase } from "@oslojs/encoding";
 import { and, eq, sql } from "drizzle-orm";
 import { db, tables } from "../database/db";
-import type { User } from "../use-cases/user";
+import type { User } from "../use-cases/types";
 
 export async function validateSessionToken(
 	token: string

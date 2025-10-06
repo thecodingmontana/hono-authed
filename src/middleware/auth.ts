@@ -1,7 +1,7 @@
 import type { Context, Next } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { type Session, validateSessionToken } from "../lib/session";
-import type { User } from "../use-cases/user";
+import type { User } from "../use-cases/types";
 
 export type AuthContext = {
 	Variables: {

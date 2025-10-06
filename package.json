@@ -25,6 +25,7 @@
     "@react-email/components": "0.5.5",
     "@upstash/redis": "^1.35.4",
     "arctic": "^3.7.0",
+    "argon2": "^0.44.0",
     "drizzle-orm": "^0.44.6",
     "hono": "^4.9.10",
     "nanoid": "^5.1.6",
