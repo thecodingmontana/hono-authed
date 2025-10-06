@@ -19,8 +19,12 @@
   "dependencies": {
     "@hono/node-server": "^1.19.5",
     "@hono/zod-validator": "^0.7.3",
+    "@oslojs/binary": "^1.0.0",
+    "@oslojs/crypto": "^1.0.1",
+    "@oslojs/encoding": "^1.1.0",
     "@react-email/components": "0.5.5",
     "@upstash/redis": "^1.35.4",
+    "arctic": "^3.7.0",
     "drizzle-orm": "^0.44.6",
     "hono": "^4.9.10",
     "nanoid": "^5.1.6",
