@@ -1,8 +1,3 @@
-```
-npm install
-npm run dev
-```
+# Hono Authed
 
-```
-open http://localhost:3000
-```
+This example demonstrates session-based authentication using [Hono](https://hono.dev/).
