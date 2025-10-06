@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { formSchema, verifyCodeFormSchema } from "../form-schema/auth";
 import { sendEmailVerificationMail } from "../lib/mails/email-verification";
+import { rateLimiter } from "../middleware/rate-limiter";
 import {
 	createEmailVerificationCode,
 	getEmailVerificationCode,
@@ -23,6 +24,7 @@ const authRoute = new Hono();
 
 authRoute.post(
 	"/signin/send-verification-code",
+	rateLimiter({ windowMs: 60_000, max: 5, keyPrefix: "register" }),
 	zValidator("json", formSchema),
 	async (c) => {
 		try {
