@@ -1,0 +1,46 @@
+{
+  "name": "hono-authed",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --fix .",
+    "format": "biome format --write .",
+    "check": "biome check --fix . && tsc --noEmit",
+    "deps": "pnpm dlx taze@latest -Ilw",
+    "deps:major": "pnpm dlx taze@latest major -Ilw",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.5",
+    "@hono/zod-validator": "^0.7.3",
+    "@react-email/components": "0.5.5",
+    "hono": "^4.9.10",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "resend": "^6.1.2",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.4",
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@types/node": "^20.11.17",
+    "@types/react": "^19.2.0",
+    "dotenv": "^17.2.3",
+    "husky": "^9.1.7",
+    "lefthook": "^1.13.6",
+    "lint-staged": "^16.2.3",
+    "react-email": "4.2.12",
+    "tsx": "^4.7.1",
+    "typescript": "^5.8.3",
+    "ultracite": "5.4.7"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,jsonc,css,scss,md,mdx}": [
+      "pnpm dlx ultracite fix"
+    ]
+  }
+}
