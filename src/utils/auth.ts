@@ -1,8 +1,12 @@
+/** biome-ignore-all lint/suspicious/noConsole: ignore all */
+
 import { generateRandomString, type RandomReader } from "@oslojs/crypto/random";
 import { encodeBase32UpperCaseNoPadding } from "@oslojs/encoding";
 import { Google } from "arctic";
 import argon2 from "argon2";
 import { env } from "@/env";
+import { redis } from "@/lib/redis";
+import { checkUniqueCode } from "@/use-cases/user";
 import type { Session, User } from "../use-cases/types";
 
 export type TimeSpanUnit = "ms" | "s" | "m" | "h" | "d" | "w";
@@ -87,3 +91,73 @@ export async function verifyHashedPassword(
 export type SessionValidationResult =
 	| { session: Session; user: User }
 	| { session: null; user: null };
+
+export async function getCachedUniqueCode(email: string, code: string) {
+	const cacheKey = `unique_code:${email}:${code}`;
+
+	try {
+		const cached = await redis.get(cacheKey);
+		if (cached) {
+			const parsed = JSON.parse(cached);
+			// Convert expires_at string back to Date object
+			return {
+				...parsed,
+				expires_at: new Date(parsed.expires_at),
+			};
+		}
+	} catch (error) {
+		console.error("Redis error fetching unique code:", error);
+	}
+
+	// Cache miss - fetch from DB
+	const uniqueCode = await checkUniqueCode(email, code.trim());
+
+	if (uniqueCode) {
+		try {
+			// Cache for 10 minutes or until expiration, whichever is shorter
+			const ttl = Math.min(
+				UNIQUE_CODE_TTL,
+				Math.floor((uniqueCode.expires_at.getTime() - Date.now()) / 1000)
+			);
+			if (ttl > 0) {
+				await redis.setex(cacheKey, ttl, JSON.stringify(uniqueCode));
+			}
+		} catch (error) {
+			console.error("Failed to cache unique code:", error);
+		}
+	}
+
+	return uniqueCode;
+}
+
+// Cache unique code immediately after creation/update
+export async function cacheUniqueCode(
+	email: string,
+	code: string,
+	uniqueCode: { id: string; email: string; code: string; expires_at: Date }
+) {
+	const cacheKey = `unique_code:${email}:${code}`;
+	try {
+		const ttl = Math.floor(
+			(uniqueCode.expires_at.getTime() - Date.now()) / 1000
+		);
+		if (ttl > 0) {
+			await redis.setex(cacheKey, ttl, JSON.stringify(uniqueCode));
+		}
+	} catch (error) {
+		console.error("Failed to cache unique code:", error);
+	}
+}
+
+// Clear unique code from cache
+export async function clearUniqueCodeCache(email: string, code: string) {
+	const cacheKey = `unique_code:${email}:${code}`;
+	try {
+		await redis.del(cacheKey);
+	} catch (error) {
+		console.error("Failed to clear unique code cache:", error);
+	}
+}
+
+export const INVALID_CREDENTIALS = "Invalid credentials provided";
+export const UNIQUE_CODE_TTL = 600; // 10 minutes

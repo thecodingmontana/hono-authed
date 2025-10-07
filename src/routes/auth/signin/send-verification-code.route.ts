@@ -1,6 +1,7 @@
 import { createRoute } from "@hono/zod-openapi";
 import * as HttpStatusCodes from "stoker/http-status-codes";
 import { jsonContent } from "stoker/openapi/helpers";
+import type { UniqueCode } from "@/database/schema";
 import { createRouter } from "@/lib/create-app";
 import { sendEmailVerificationMail } from "@/lib/mails/email-verification";
 import {
@@ -10,8 +11,10 @@ import {
 	updateEmailVerificationCode,
 } from "@/use-cases/user";
 import {
+	cacheUniqueCode,
 	createDate,
 	generateUniqueCode,
+	INVALID_CREDENTIALS,
 	TimeSpan,
 	verifyHashedPassword,
 } from "@/utils/auth";
@@ -19,8 +22,6 @@ import { errorResponseSchema, successResponseSchema } from "@/zod-schema";
 import { formSchema } from "@/zod-schema/auth";
 
 const router = createRouter();
-
-const INVALID_CREDENTIALS = "Invalid credentials provided";
 
 /*
  * Signin Send Verification Code Route
@@ -93,10 +94,15 @@ router.openapi(
 				expiryTimestamp: expiresAt,
 			};
 
+			let uniqueCode: UniqueCode;
 			if (existingCode) {
-				await updateEmailVerificationCode(email, code, expiresAt);
+				uniqueCode = await updateEmailVerificationCode(email, code, expiresAt);
 			} else {
-				await createEmailVerificationCode(email, code, expiresAt);
+				uniqueCode = await createEmailVerificationCode(email, code, expiresAt);
+			}
+
+			if (uniqueCode) {
+				await cacheUniqueCode(email, code, uniqueCode);
 			}
 
 			await sendEmailVerificationMail(emailData);

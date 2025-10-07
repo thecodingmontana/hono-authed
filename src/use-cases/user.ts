@@ -44,6 +44,7 @@ export async function createUser(
 		email_verified: user.email_verified,
 		created_at: user.created_at,
 		updated_at: user.updated_at,
+		registered_2fa: user.registered_2fa,
 	};
 }
 
@@ -100,11 +101,16 @@ export async function createEmailVerificationCode(
 	code: string,
 	expiresAt: Date
 ) {
-	await db.insert(tables.unique_code).values({
-		email,
-		code,
-		expires_at: expiresAt,
-	});
+	const [uniqueCode] = await db
+		.insert(tables.unique_code)
+		.values({
+			email,
+			code,
+			expires_at: expiresAt,
+		})
+		.returning();
+
+	return uniqueCode;
 }
 
 export async function updateEmailVerificationCode(
@@ -112,13 +118,16 @@ export async function updateEmailVerificationCode(
 	code: string,
 	expiresAt: Date
 ) {
-	await db
+	const [uniqueCode] = await db
 		.update(tables.unique_code)
 		.set({
 			code,
 			expires_at: expiresAt,
 		})
-		.where(eq(tables.unique_code.email, email));
+		.where(eq(tables.unique_code.email, email))
+		.returning();
+
+	return uniqueCode;
 }
 
 export async function checkUniqueCode(email: string, code: string) {

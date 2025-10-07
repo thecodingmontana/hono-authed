@@ -1,6 +1,7 @@
 import { createRoute } from "@hono/zod-openapi";
 import * as HttpStatusCodes from "stoker/http-status-codes";
 import { jsonContent } from "stoker/openapi/helpers";
+import type { UniqueCode } from "@/database/schema";
 import { createRouter } from "@/lib/create-app";
 import { sendEmailVerificationMail } from "@/lib/mails/email-verification";
 import {
@@ -9,7 +10,12 @@ import {
 	getUserByEmail,
 	updateEmailVerificationCode,
 } from "@/use-cases/user";
-import { createDate, generateUniqueCode, TimeSpan } from "@/utils/auth";
+import {
+	cacheUniqueCode,
+	createDate,
+	generateUniqueCode,
+	TimeSpan,
+} from "@/utils/auth";
 import { errorResponseSchema, successResponseSchema } from "@/zod-schema";
 import { formSchema } from "@/zod-schema/auth";
 
@@ -49,16 +55,19 @@ router.openapi(
 		try {
 			const { email } = c.req.valid("json");
 
-			const [userResult, codeResult] = await Promise.allSettled([
+			const [existingUserResult, codeResult] = await Promise.allSettled([
 				getUserByEmail(email),
 				getEmailVerificationCode(email),
 			]);
 
-			const user = userResult.status === "fulfilled" ? userResult.value : null;
+			const existingUser =
+				existingUserResult.status === "fulfilled"
+					? existingUserResult.value
+					: null;
 			const existingCode =
 				codeResult.status === "fulfilled" ? codeResult.value : null;
 
-			if (user) {
+			if (existingUser) {
 				return c.json(
 					{ error: "Email already in use!" },
 					HttpStatusCodes.BAD_REQUEST
@@ -75,10 +84,15 @@ router.openapi(
 				expiryTimestamp: expiresAt,
 			};
 
+			let uniqueCode: UniqueCode;
 			if (existingCode) {
-				await updateEmailVerificationCode(email, code, expiresAt);
+				uniqueCode = await updateEmailVerificationCode(email, code, expiresAt);
 			} else {
-				await createEmailVerificationCode(email, code, expiresAt);
+				uniqueCode = await createEmailVerificationCode(email, code, expiresAt);
+			}
+
+			if (uniqueCode) {
+				await cacheUniqueCode(email, code, uniqueCode);
 			}
 
 			await sendEmailVerificationMail(emailData);
