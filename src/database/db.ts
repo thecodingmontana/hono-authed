@@ -1,12 +1,12 @@
-import "dotenv/config";
 import { upstashCache } from "drizzle-orm/cache/upstash";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { env } from "@/env";
 import * as schema from "./schema";
 
 const tables = schema;
 
-const connectionString = process.env.DATABASE_URL as string;
+const connectionString = env.DATABASE_URL;
 
 const queryClient = postgres(connectionString, {
 	prepare: false,
@@ -17,8 +17,8 @@ const db = drizzle(queryClient, {
 	schema,
 	casing: "snake_case",
 	cache: upstashCache({
-		url: process.env.UPSTASH_URL as string,
-		token: process.env.UPSTASH_TOKEN as string,
+		url: env.UPSTASH_URL,
+		token: env.UPSTASH_TOKEN,
 		global: true,
 		config: { ex: 60 },
 	}),

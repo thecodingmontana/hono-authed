@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { formSchema, verifyCodeFormSchema } from "../form-schema/auth";
 import { sendEmailVerificationMail } from "../lib/mails/email-verification";
-import { rateLimiter } from "../middleware/rate-limiter";
+import { rateLimiter } from "../middlewares/rate-limiter";
 import {
 	createEmailVerificationCode,
 	getEmailVerificationCode,

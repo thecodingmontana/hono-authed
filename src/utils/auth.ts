@@ -2,6 +2,7 @@ import { generateRandomString, type RandomReader } from "@oslojs/crypto/random";
 import { encodeBase32UpperCaseNoPadding } from "@oslojs/encoding";
 import { Google } from "arctic";
 import argon2 from "argon2";
+import { env } from "@/env";
 import type { Session, User } from "../use-cases/types";
 
 export type TimeSpanUnit = "ms" | "s" | "m" | "h" | "d" | "w";
@@ -65,9 +66,9 @@ export function generateUniqueCode(length: number): string {
 }
 
 export const googleAuth = new Google(
-	process.env.GOOGLE_CLIENT_ID as string,
-	process.env.GOOGLE_CLIENT_SECRET as string,
-	`http://localhost:${process.env.SERVER_PORt}/api/v1/auth/signin/oauth/google/callback`
+	env.GOOGLE_CLIENT_ID,
+	env.GOOGLE_CLIENT_SECRET,
+	`http://localhost:${env.SERVER_PORT}/api/v1/auth/signin/oauth/google/callback`
 );
 
 export async function hashPassword(password: string) {

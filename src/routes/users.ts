@@ -1,8 +1,8 @@
-import { Hono } from "hono";
-import { requireAuth } from "../middleware/auth";
+import { createRouter } from "@/lib/create-app";
+import { requireAuth } from "../middlewares/auth";
 import { getAllUsersUseCase } from "../use-cases/user";
 
-const usersRoute = new Hono();
+const usersRoute = createRouter();
 
 usersRoute.get("/all", requireAuth, async (c) => {
 	const users = await getAllUsersUseCase();

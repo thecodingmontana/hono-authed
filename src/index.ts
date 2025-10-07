@@ -1,45 +1,8 @@
-import "dotenv/config";
 import { serve } from "@hono/node-server";
-import { Hono } from "hono";
-import { logger } from "hono/logger";
-import { authMiddleware } from "./middleware/auth";
-import routes from "./routes";
+import app from "./app";
+import { env } from "./env";
 
-const app = new Hono();
-
-app.use("*", logger());
-app.use("*", authMiddleware);
-app.route("/api/v1", routes);
-
-/*
- * 404 Handler
- */
-app.notFound((c) =>
-	c.json(
-		{
-			error: "Not Found",
-			message: "The requested endpoint does not exist",
-			path: c.req.path,
-		},
-		404
-	)
-);
-
-/*
- * Global error handler
- */
-app.onError((err, c) =>
-	c.json(
-		{
-			error: "Internal Server Error",
-			message: err.message || "An unexpected error occurred",
-			...(process.env.NODE_ENV === "development" && { stack: err.stack }),
-		},
-		500
-	)
-);
-
-const PORT = process.env.SERVER_PORT || 4000;
+const PORT = env.SERVER_PORT;
 
 const server = serve(
 	{
@@ -65,5 +28,3 @@ process.on("SIGTERM", () => {
 		process.exit(0);
 	});
 });
-
-export default app;

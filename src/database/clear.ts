@@ -1,6 +1,5 @@
 /** biome-ignore-all lint/suspicious/noConsole: ignore all */
 
-import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
 import { sql } from "drizzle-orm";

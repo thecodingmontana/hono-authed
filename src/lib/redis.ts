@@ -1,7 +1,8 @@
 import { Redis } from "ioredis";
+import { env } from "@/env";
 
 export const redis = new Redis({
-	host: process.env.REDIS_HOST || "localhost",
-	port: Number(process.env.REDIS_PORT),
-	password: process.env.REDIS_PASSWORD,
+	host: env.REDIS_HOST || "localhost",
+	port: env.REDIS_PORT,
+	password: env.REDIS_PASSWORD,
 });
