@@ -9,18 +9,11 @@ import {
 	getUserByEmail,
 	updateEmailVerificationCode,
 } from "@/use-cases/user";
-import {
-	createDate,
-	generateUniqueCode,
-	TimeSpan,
-	verifyHashedPassword,
-} from "@/utils/auth";
+import { createDate, generateUniqueCode, TimeSpan } from "@/utils/auth";
 import { errorResponseSchema, successResponseSchema } from "@/zod-schema";
 import { formSchema } from "@/zod-schema/auth";
 
 const router = createRouter();
-
-const INVALID_CREDENTIALS = "Invalid credentials provided";
 
 /*
  * Signup Send Verification Code Route
@@ -42,9 +35,9 @@ router.openapi(
 				successResponseSchema,
 				"Verification code sent successfully"
 			),
-			[HttpStatusCodes.UNAUTHORIZED]: jsonContent(
+			[HttpStatusCodes.BAD_REQUEST]: jsonContent(
 				errorResponseSchema,
-				"Invalid credentials"
+				"Bad request"
 			),
 			[HttpStatusCodes.INTERNAL_SERVER_ERROR]: jsonContent(
 				errorResponseSchema,
@@ -54,7 +47,7 @@ router.openapi(
 	}),
 	async (c) => {
 		try {
-			const { email, password } = c.req.valid("json");
+			const { email } = c.req.valid("json");
 
 			const [userResult, codeResult] = await Promise.allSettled([
 				getUserByEmail(email),
@@ -65,21 +58,10 @@ router.openapi(
 			const existingCode =
 				codeResult.status === "fulfilled" ? codeResult.value : null;
 
-			if (!user?.password) {
+			if (user) {
 				return c.json(
-					{ error: INVALID_CREDENTIALS },
-					HttpStatusCodes.UNAUTHORIZED
-				);
-			}
-
-			const isPasswordValid = await verifyHashedPassword(
-				user.password,
-				password
-			);
-			if (!isPasswordValid) {
-				return c.json(
-					{ error: INVALID_CREDENTIALS },
-					HttpStatusCodes.UNAUTHORIZED
+					{ error: "Email already in use!" },
+					HttpStatusCodes.BAD_REQUEST
 				);
 			}
 

@@ -22,7 +22,7 @@ export const EmailVerificationMailTemplate: React.FC<
 	Readonly<EmailVerificationMailTemplateProps>
 > = ({
 	code,
-	companyName = "Hono",
+	companyName = "Hono Authed",
 	expirationMinutes = 10,
 	expiryTimestamp,
 }) => {

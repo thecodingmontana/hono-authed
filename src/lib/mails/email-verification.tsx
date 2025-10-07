@@ -16,7 +16,7 @@ export const sendEmailVerificationMail = async ({
 }: Props) => {
 	try {
 		const result = await resend.emails.send({
-			from: "Team GoodsnCart <noreply@thecodingmontana.com>",
+			from: "Team Hono Authed <noreply@thecodingmontana.com>",
 			to: [email],
 			subject,
 			react: (
