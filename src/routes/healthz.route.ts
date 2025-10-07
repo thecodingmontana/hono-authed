@@ -1,4 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
+import * as HttpStatusCodes from "stoker/http-status-codes";
+import { jsonContent } from "stoker/openapi/helpers";
 import { createRouter } from "@/lib/create-app";
 import { driver as pool } from "../database/db";
 import { redis } from "../lib/redis";
@@ -11,32 +13,25 @@ const router = createRouter();
 router.openapi(
 	createRoute({
 		method: "get",
-		path: "/healthz",
+		tags: ["Healthz"],
+		path: "/",
 		responses: {
-			200: {
-				content: {
-					"application/json": {
-						schema: z.object({
-							status: z.string(),
-							redis: z.string(),
-							database: z.string(),
-						}),
-					},
-				},
-				description: "Hono Authed Healthz (Healthy)",
-			},
-			503: {
-				content: {
-					"application/json": {
-						schema: z.object({
-							status: z.string(),
-							redis: z.string(),
-							database: z.string(),
-						}),
-					},
-				},
-				description: "Hono Authed Healthz (Unhealthy)",
-			},
+			[HttpStatusCodes.OK]: jsonContent(
+				z.object({
+					status: z.string(),
+					redis: z.string(),
+					database: z.string(),
+				}),
+				"Hono Authed Healthz (Healthy)"
+			),
+			[HttpStatusCodes.SERVICE_UNAVAILABLE]: jsonContent(
+				z.object({
+					status: z.string(),
+					redis: z.string(),
+					database: z.string(),
+				}),
+				"Hono Authed Healthz (Unhealthy)"
+			),
 		},
 	}),
 	async (c) => {
