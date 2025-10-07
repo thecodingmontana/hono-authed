@@ -1,7 +1,10 @@
 import type { Context, Next } from "hono";
-import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import { env } from "@/env";
-import { type Session, validateSessionToken } from "../lib/session";
+import { deleteCookie, getCookie } from "hono/cookie";
+import {
+	type Session,
+	setSessionTokenCookie,
+	validateSessionToken,
+} from "../lib/session";
 import type { User } from "../use-cases/types";
 
 export type AuthContext = {
@@ -29,13 +32,8 @@ export async function authMiddleware(c: Context<AuthContext>, next: Next) {
 		return next();
 	}
 
-	setCookie(c, "session", token, {
-		httpOnly: true,
-		secure: env.NODE_ENV === "production",
-		sameSite: "lax",
-		path: "/",
-		expires: session.expires_at,
-	});
+	// Update cookie with potentially refreshed expiration
+	setSessionTokenCookie(c, token, session.expires_at);
 
 	c.set("user", user);
 	c.set("session", session);

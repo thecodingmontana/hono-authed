@@ -22,6 +22,10 @@ const router = createRouter();
 
 const INVALID_CREDENTIALS = "Invalid credentials provided";
 
+/*
+ * Signin Send Verification Code Route
+ */
+
 router.openapi(
 	createRoute({
 		method: "post",

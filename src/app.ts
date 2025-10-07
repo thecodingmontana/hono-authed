@@ -1,13 +1,15 @@
+import configureOpenAPI from "@/lib/configure-open-api";
+import createApp from "@/lib/create-app";
+import authRouter from "@/routes/auth/index.route";
 import heathz from "@/routes/healthz.route";
-import configureOpenAPI from "./lib/configure-open-api";
-import createApp from "./lib/create-app";
-import authRouter from "./routes/auth/index.route";
+import usersRouter from "@/routes/users/index.route";
 
 const app = createApp();
 
 const routes = [
 	{ path: "/healthz", router: heathz },
 	{ path: "/auth", router: authRouter },
+	{ path: "/users", router: usersRouter },
 ];
 
 configureOpenAPI(app);
