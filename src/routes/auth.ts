@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { formSchema, verifyCodeFormSchema } from "../form-schema/auth";
 import { sendEmailVerificationMail } from "../lib/mails/email-verification";
 import { rateLimiter } from "../middlewares/rate-limiter";
 import {
@@ -15,6 +14,7 @@ import {
 	verifyHashedPassword,
 } from "../utils/auth";
 import { zValidator } from "../utils/validator";
+import { formSchema, verifyCodeFormSchema } from "../zod-schema/auth";
 
 const authRoute = new Hono();
 

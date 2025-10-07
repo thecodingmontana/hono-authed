@@ -1,8 +1,9 @@
 import { and, eq } from "drizzle-orm";
+import { UAParser } from "ua-parser-js";
 import { getAllUsers } from "../data-access/user";
 import { db, tables } from "../database/db";
 import type { User } from "../database/schema";
-import type { UserId } from "./types";
+import type { IpApiResponse, SessionMetadata, UserId } from "./types";
 
 export const getAllUsersUseCase = async () => getAllUsers();
 
@@ -129,4 +130,55 @@ export async function checkUniqueCode(email: string, code: string) {
 
 export async function deleteUniqueCode(id: string) {
 	await db.delete(tables.unique_code).where(eq(tables.unique_code.id, id));
+}
+
+export async function createSessionMetadata(
+	headers: Record<string, string>
+): Promise<SessionMetadata> {
+	const localIp =
+		headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+		headers["x-real-ip"] ||
+		headers["cf-connecting-ip"] ||
+		headers["x-client-ip"] ||
+		"127.0.0.1";
+
+	const userAgent = headers["user-agent"] ?? "";
+	const { browser, device, os } = new UAParser(userAgent).getResult();
+
+	const location = await getLocationFromIp(localIp);
+
+	return {
+		location,
+		browser: browser.name ?? "Unknown Browser",
+		device: device.vendor ?? "Unknown Device",
+		os: os.name ?? "Unknown OS",
+		ipAddress: localIp,
+	};
+}
+
+async function getLocationFromIp(ip: string): Promise<string> {
+	if (
+		ip === "127.0.0.1" ||
+		ip === "::1" ||
+		ip.startsWith("192.168.") ||
+		ip.startsWith("10.")
+	) {
+		return "Localhost";
+	}
+
+	try {
+		const response = await fetch(`http://ip-api.com/json/${ip}`);
+		if (!response.ok) {
+			return "Unknown";
+		}
+
+		const ipData = (await response.json()) as IpApiResponse;
+		if (ipData.status === "success") {
+			return `${ipData.city || "Unknown"}, ${ipData.country || "Unknown"}`;
+		}
+	} catch {
+		// ignore network errors
+	}
+
+	return "Unknown";
 }

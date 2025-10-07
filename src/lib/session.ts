@@ -1,8 +1,15 @@
 import { sha256 } from "@oslojs/crypto/sha2";
 import { encodeBase32, encodeHexLowerCase } from "@oslojs/encoding";
 import { and, eq, sql } from "drizzle-orm";
+import type { Context } from "hono";
+import { setCookie } from "hono/cookie";
+import { env } from "@/env";
 import { db, tables } from "../database/db";
-import type { User } from "../use-cases/types";
+import type { SessionMetadata, User, UserId } from "../use-cases/types";
+import { redis } from "./redis";
+
+const SESSION_REFRESH_INTERVAL_MS = 1000 * 60 * 60 * 24 * 15;
+const SESSION_MAX_DURATION_MS = SESSION_REFRESH_INTERVAL_MS * 2;
 
 export async function validateSessionToken(
 	token: string
@@ -91,24 +98,62 @@ export function generateSessionToken(): string {
 
 export async function createSession(
 	token: string,
-	user_id: string
+	user_id: string,
+	metadata: SessionMetadata
 ): Promise<Session> {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-	const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
-
 	const session: Session = {
 		id: sessionId,
 		user_id,
-		expires_at: expiresAt,
+		expires_at: new Date(Date.now() + SESSION_MAX_DURATION_MS),
 	};
-
 	await db.insert(tables.session).values({
 		id: sessionId,
-		expires_at: sql`${Math.floor(expiresAt.getTime() / 1000)}`,
 		user_id,
+		expires_at: new Date(Date.now() + SESSION_MAX_DURATION_MS),
+		location: metadata.location,
+		browser: metadata.browser,
+		device: metadata.device,
+		os: metadata.os,
 	});
-
 	return session;
+}
+
+const SESSION_COOKIE_NAME = "session";
+
+export function setSessionTokenCookie(
+	c: Context,
+	token: string,
+	expiresAt: Date
+): void {
+	setCookie(c, SESSION_COOKIE_NAME, token, {
+		httpOnly: true,
+		sameSite: "lax",
+		secure: env.NODE_ENV === "production",
+		expires: expiresAt,
+		path: "/",
+	});
+}
+
+export function deleteSessionTokenCookie(c: Context): void {
+	setCookie(c, SESSION_COOKIE_NAME, "", {
+		httpOnly: true,
+		sameSite: "lax",
+		secure: env.NODE_ENV === "production",
+		maxAge: 0,
+		path: "/",
+	});
+}
+
+export async function setSession(
+	c: Context,
+	userId: UserId,
+	metadata: SessionMetadata
+) {
+	const token = generateSessionToken();
+	const session = await createSession(token, userId, metadata);
+	await redis.setex(`session:${session.id}`, 86_400, JSON.stringify(session));
+	setSessionTokenCookie(c, token, session.expires_at);
 }
 
 export async function invalidateSession(sessionId: string): Promise<void> {

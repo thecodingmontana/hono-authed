@@ -14,6 +14,12 @@ export type SessionMetadata = {
 	ipAddress: string;
 };
 
+export type IpApiResponse = {
+	status: string;
+	city?: string;
+	country?: string;
+};
+
 export type User = {
 	id: string;
 	email: string;
