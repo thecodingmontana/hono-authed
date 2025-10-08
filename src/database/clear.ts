@@ -11,6 +11,11 @@ async function main() {
 		throw new Error("Schema not loaded");
 	}
 
+	// Get current database role
+	const result = await db.execute(sql.raw("SELECT current_user;"));
+	const currentRole = (result[0] as { current_user: string }).current_user;
+	console.log(`🔑 Current database role: ${currentRole}`);
+
 	// Drop drizzle schema (if it exists)
 	await db.execute(sql.raw(`DROP SCHEMA IF EXISTS "drizzle" CASCADE;`));
 
@@ -18,18 +23,18 @@ async function main() {
 	await db.execute(sql.raw("DROP SCHEMA IF EXISTS public CASCADE;"));
 	await db.execute(sql.raw("CREATE SCHEMA public;"));
 
-	// Grant privileges
+	// Grant privileges to current role
 	await db.execute(
 		sql.raw(`
-      GRANT USAGE ON SCHEMA public TO postgres;
-      GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA public TO postgres;
-      GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres;
+      GRANT USAGE ON SCHEMA public TO ${currentRole};
+      GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA public TO ${currentRole};
+      GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${currentRole};
 
       ALTER DEFAULT PRIVILEGES IN SCHEMA public
-        GRANT ALL ON TABLES    TO postgres;
+        GRANT ALL ON TABLES    TO ${currentRole};
 
       ALTER DEFAULT PRIVILEGES IN SCHEMA public
-        GRANT ALL ON SEQUENCES TO postgres;
+        GRANT ALL ON SEQUENCES TO ${currentRole};
     `)
 	);
 
