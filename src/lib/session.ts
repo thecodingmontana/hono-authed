@@ -124,6 +124,17 @@ function unpackSession(data: string): CachedSessionData {
 	};
 }
 
+// Helper function to check if value is a valid Redis string response
+// Upstash Redis returns null for missing keys, but can also return other types
+function isValidRedisString(value: unknown): value is string {
+	return (
+		value !== null &&
+		value !== undefined &&
+		typeof value === "string" &&
+		value.length > 0
+	);
+}
+
 async function cleanupExpiredSession(sessionId: string): Promise<void> {
 	try {
 		await Promise.all([
@@ -250,7 +261,7 @@ export async function validateSessionToken(
 
 	try {
 		const redisData = await redis.get(`s:${sessionId}`);
-		if (redisData) {
+		if (isValidRedisString(redisData)) {
 			const { session, user } = unpackSession(redisData);
 			if (now >= session.expires_at.getTime()) {
 				memoryCache.delete(sessionId);

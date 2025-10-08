@@ -97,9 +97,8 @@ export async function getCachedUniqueCode(email: string, code: string) {
 
 	try {
 		const cached = await redis.get(cacheKey);
-		if (cached) {
+		if (cached && typeof cached === "string" && cached.length > 0) {
 			const parsed = JSON.parse(cached);
-			// Convert expires_at string back to Date object
 			return {
 				...parsed,
 				expires_at: new Date(parsed.expires_at),
@@ -114,7 +113,7 @@ export async function getCachedUniqueCode(email: string, code: string) {
 
 	if (uniqueCode) {
 		try {
-			// Cache for 10 minutes or until expiration, whichever is shorter
+			// Cache for 10 minutes or until expiration
 			const ttl = Math.min(
 				UNIQUE_CODE_TTL,
 				Math.floor((uniqueCode.expires_at.getTime() - Date.now()) / 1000)
@@ -149,7 +148,6 @@ export async function cacheUniqueCode(
 	}
 }
 
-// Clear unique code from cache
 export async function clearUniqueCodeCache(email: string, code: string) {
 	const cacheKey = `unique_code:${email}:${code}`;
 	try {
