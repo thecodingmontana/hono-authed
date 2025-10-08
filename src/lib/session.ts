@@ -16,6 +16,8 @@ const SESSION_MAX_DURATION_MS = SESSION_REFRESH_INTERVAL_MS * 2; // 30 days
 const REDIS_SESSION_TTL = 86_400; // 24 hours
 const REDIS_USER_TTL = 3600; // 1 hour
 const SESSION_COOKIE_NAME = "session";
+const MAX_COOKIE_AGE_DAYS = 400; // Hono's maximum
+const MAX_COOKIE_AGE_MS = MAX_COOKIE_AGE_DAYS * 24 * 60 * 60 * 1000;
 
 export type Session = {
 	id: string;
@@ -124,8 +126,6 @@ function unpackSession(data: string): CachedSessionData {
 	};
 }
 
-// Helper function to check if value is a valid Redis string response
-// Upstash Redis returns null for missing keys, but can also return other types
 function isValidRedisString(value: unknown): value is string {
 	return (
 		value !== null &&
@@ -316,11 +316,24 @@ export function setSessionTokenCookie(
 	token: string,
 	expiresAt: Date
 ): void {
+	const now = Date.now();
+	const expiresAtTime = expiresAt.getTime();
+
+	// Ensure expires date is valid and not in the past
+	if (expiresAtTime <= now) {
+		throw new Error("Session expiration date is in the past");
+	}
+
+	// Cap the cookie expiration to Hono's 400-day limit
+	const maxAllowedExpires = new Date(now + MAX_COOKIE_AGE_MS);
+	const cookieExpires =
+		expiresAtTime > maxAllowedExpires.getTime() ? maxAllowedExpires : expiresAt;
+
 	setCookie(c, SESSION_COOKIE_NAME, token, {
 		httpOnly: true,
 		sameSite: "lax",
 		secure: env.NODE_ENV === "production",
-		expires: expiresAt,
+		expires: cookieExpires,
 		path: "/",
 	});
 }
