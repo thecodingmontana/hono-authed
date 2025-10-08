@@ -6,7 +6,7 @@ export const env = createEnv({
 	server: {
 		DATABASE_URL: z.url(),
 		NODE_ENV: z.string().default("development"),
-		SERVER_PORT: z.coerce.number().default(4000),
+		PORT: z.coerce.number().default(4000),
 		GOOGLE_CLIENT_ID: z.string(),
 		GOOGLE_CLIENT_SECRET: z.string(),
 		RESEND_API_KEY: z.string(),

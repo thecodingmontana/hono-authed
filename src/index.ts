@@ -5,7 +5,7 @@ import consola from "consola";
 import app from "./app";
 import { env } from "./env";
 
-const PORT = env.SERVER_PORT;
+const PORT = env.PORT;
 consola.start("Starting Server...");
 
 const server = serve(

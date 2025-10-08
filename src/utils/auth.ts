@@ -72,7 +72,7 @@ export function generateUniqueCode(length: number): string {
 export const googleAuth = new Google(
 	env.GOOGLE_CLIENT_ID,
 	env.GOOGLE_CLIENT_SECRET,
-	`http://localhost:${env.SERVER_PORT}/api/v1/auth/signin/oauth/google/callback`
+	`http://localhost:${env.PORT}/api/v1/auth/signin/oauth/google/callback`
 );
 
 export async function hashPassword(password: string) {
