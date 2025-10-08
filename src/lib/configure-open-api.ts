@@ -12,7 +12,7 @@ export default function configureOpenAPI(app: AppOpenAPI) {
 	});
 
 	app.get(
-		"/api/v1/doc",
+		"/api/v1/docs",
 		Scalar({
 			url: "/api/v1/open-api.json",
 			theme: "deepSpace",

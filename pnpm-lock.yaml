@@ -47,6 +47,12 @@ importers:
       argon2:
         specifier: ^0.44.0
         version: 0.44.0
+      chalk:
+        specifier: ^5.6.2
+        version: 5.6.2
+      consola:
+        specifier: ^3.4.2
+        version: 3.4.2
       drizzle-orm:
         specifier: ^0.44.6
         version: 0.44.6(@upstash/redis@1.35.5)(postgres@3.4.7)
